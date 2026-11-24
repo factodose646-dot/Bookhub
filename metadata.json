@@ -1,0 +1,6 @@
+{
+  "name": "BookHub",
+  "description": "A modern PDF Books Library application with a dark emerald green, warm cream, and subtle gold design system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

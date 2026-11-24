@@ -1,0 +1,170 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny all access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function hasActiveAdminDoc() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+        (!('active' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data) ||
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true);
+    }
+
+    // Verified admin check: relies exclusively on server-issued custom claims
+    // or server-managed /admins/{uid} records (never client-writable flags).
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        hasActiveAdminDoc()
+      );
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+        data.icon is string && data.icon.size() >= 1 && data.icon.size() <= 40 &&
+        data.color is int &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time &&
+        (!('shortName' in data) || (data.shortName is string && data.shortName.size() <= 80)) &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 400)) &&
+        (!('secondaryColor' in data) || data.secondaryColor is int) &&
+        (!('sortOrder' in data) || (data.sortOrder is int && data.sortOrder >= 0 && data.sortOrder <= 1000));
+    }
+
+    function isValidBook(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.author is string && data.author.size() >= 1 && data.author.size() <= 120 &&
+        isValidId(data.categoryId) &&
+        data.fileSize is string && data.fileSize.size() >= 1 && data.fileSize.size() <= 40 &&
+        data.fileSizeBytes is int && data.fileSizeBytes >= 0 && data.fileSizeBytes <= 2147483648 &&
+        data.language is string && data.language.size() >= 1 && data.language.size() <= 50 &&
+        data.featured is bool &&
+        data.popular is bool &&
+        data.recent is bool &&
+        data.published is bool &&
+        data.createdByUid is string && data.createdByUid.size() >= 1 && data.createdByUid.size() <= 128 &&
+        data.updatedByUid is string && data.updatedByUid.size() >= 1 && data.updatedByUid.size() <= 128 &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 4000)) &&
+        (!('coverUrl' in data) || (data.coverUrl is string && data.coverUrl.size() <= 1000)) &&
+        (!('driveFileId' in data) || (data.driveFileId is string && data.driveFileId.size() <= 200)) &&
+        (!('coverDriveFileId' in data) || (data.coverDriveFileId is string && data.coverDriveFileId.size() <= 200)) &&
+        (!('pdfUrl' in data) || (data.pdfUrl is string && data.pdfUrl.size() <= 1000)) &&
+        (!('pdfAssetPath' in data) || (data.pdfAssetPath is string && data.pdfAssetPath.size() <= 240)) &&
+        (!('pageCount' in data) || (data.pageCount is int && data.pageCount >= 0 && data.pageCount <= 50000)) &&
+        (!('publishedYear' in data) || (data.publishedYear is int && data.publishedYear >= 1000 && data.publishedYear <= 2200)) &&
+        (!('addedOrder' in data) || (data.addedOrder is int && data.addedOrder >= 0)) &&
+        (!('dateAdded' in data) || (data.dateAdded is string && data.dateAdded.size() <= 40)) &&
+        (!('coverStyle' in data) || (data.coverStyle is string && data.coverStyle.size() <= 40)) &&
+        (!('coverPrimaryArgb' in data) || data.coverPrimaryArgb is int) &&
+        (!('coverSecondaryArgb' in data) || data.coverSecondaryArgb is int) &&
+        (!('coverAccentArgb' in data) || data.coverAccentArgb is int) &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+        (!('reviewCount' in data) || (data.reviewCount is int && data.reviewCount >= 0)) &&
+        (!('sampleExcerpt' in data) || (data.sampleExcerpt is string && data.sampleExcerpt.size() <= 500));
+    }
+
+    match /categories/{categoryId} {
+      // Categories are public library taxonomy; writes are strictly admin-only.
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+
+      allow create: if isAdmin() &&
+        isValidId(categoryId) &&
+        incoming().keys().hasAll(['name', 'icon', 'color', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'name', 'shortName', 'description', 'icon', 'color',
+          'secondaryColor', 'sortOrder', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().createdAt is timestamp &&
+        incoming().createdAt <= request.time &&
+        isValidCategory(incoming());
+
+      allow update: if isAdmin() &&
+        isValidId(categoryId) &&
+        isValidCategory(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'shortName', 'description', 'icon', 'color',
+          'secondaryColor', 'sortOrder', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    match /books/{bookId} {
+      // Readers & guests can read only published books. Unpublished books and all writes are admin-only.
+      allow get: if isValidId(bookId) && (existing().published == true || isAdmin());
+      allow list: if existing().published == true || isAdmin();
+
+      allow create: if isAdmin() &&
+        isValidId(bookId) &&
+        incoming().keys().hasAll([
+          'title', 'author', 'categoryId', 'fileSize', 'fileSizeBytes',
+          'language', 'featured', 'popular', 'recent', 'published',
+          'createdByUid', 'updatedByUid', 'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'title', 'author', 'description', 'categoryId', 'coverUrl',
+          'driveFileId', 'coverDriveFileId', 'pdfUrl', 'pdfAssetPath',
+          'fileSize', 'fileSizeBytes', 'pageCount', 'language',
+          'publishedYear', 'addedOrder', 'dateAdded', 'coverStyle',
+          'coverPrimaryArgb', 'coverSecondaryArgb', 'coverAccentArgb',
+          'featured', 'popular', 'recent', 'published', 'rating',
+          'reviewCount', 'sampleExcerpt', 'createdByUid', 'updatedByUid',
+          'createdAt', 'updatedAt'
+        ]) &&
+        incoming().createdByUid == request.auth.uid &&
+        incoming().updatedByUid == request.auth.uid &&
+        incoming().createdAt is timestamp &&
+        incoming().createdAt <= request.time &&
+        isValidBook(incoming()) &&
+        existsAfter(/databases/$(database)/documents/categories/$(incoming().categoryId));
+
+      allow update: if isAdmin() &&
+        isValidId(bookId) &&
+        isValidBook(incoming()) &&
+        incoming().createdByUid == existing().createdByUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedByUid == request.auth.uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'author', 'description', 'categoryId', 'coverUrl',
+          'driveFileId', 'coverDriveFileId', 'pdfUrl', 'pdfAssetPath',
+          'fileSize', 'fileSizeBytes', 'pageCount', 'language',
+          'publishedYear', 'addedOrder', 'dateAdded', 'coverStyle',
+          'coverPrimaryArgb', 'coverSecondaryArgb', 'coverAccentArgb',
+          'featured', 'popular', 'recent', 'published', 'rating',
+          'reviewCount', 'sampleExcerpt', 'updatedByUid', 'updatedAt'
+        ]) &&
+        existsAfter(/databases/$(database)/documents/categories/$(incoming().categoryId));
+
+      allow delete: if isAdmin() && isValidId(bookId);
+    }
+
+    match /admins/{userId} {
+      // Signed-in users may read ONLY their own admin doc to verify authorization;
+      // listing admins or writing admin records from clients is strictly denied.
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+  }
+}

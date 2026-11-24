@@ -1,0 +1,253 @@
+{
+  "entities": {
+    "BookCategory": {
+      "title": "BookCategory",
+      "description": "A library category stored in Firestore (document ID mapped via @DocumentId).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the category (1..80 chars)."
+        },
+        "shortName": {
+          "type": "string",
+          "description": "Compact multiline or short label for category tiles."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional summary description for the category."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon style identifier (stories, science, fiction, history, motivation, tech, islamic, other)."
+        },
+        "color": {
+          "type": "integer",
+          "description": "Primary accent ARGB color integer."
+        },
+        "secondaryColor": {
+          "type": "integer",
+          "description": "Secondary ARGB gradient color integer."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Display sort index."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on mutation."
+        }
+      },
+      "required": [
+        "name",
+        "icon",
+        "color",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "A PDF book catalog record synced via Firestore (document ID mapped via @DocumentId).",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Complete book title (1..200 chars)."
+        },
+        "author": {
+          "type": "string",
+          "description": "Book author or publisher name (1..120 chars)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional book synopsis or notes."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference ID of the category document in /categories/{categoryId}."
+        },
+        "coverUrl": {
+          "type": "string",
+          "description": "Optional HTTPS or Drive cover image URL."
+        },
+        "driveFileId": {
+          "type": "string",
+          "description": "Optional Google Drive file ID for the hosted PDF."
+        },
+        "coverDriveFileId": {
+          "type": "string",
+          "description": "Optional Google Drive file ID for the hosted cover image."
+        },
+        "pdfUrl": {
+          "type": "string",
+          "description": "Optional HTTPS or Drive PDF access URL."
+        },
+        "pdfAssetPath": {
+          "type": "string",
+          "description": "Optional bundled local asset path for offline sample editions."
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Human-readable PDF file size label."
+        },
+        "fileSizeBytes": {
+          "type": "integer",
+          "description": "Exact PDF file size in bytes."
+        },
+        "pageCount": {
+          "type": "integer",
+          "description": "Optional total page count."
+        },
+        "language": {
+          "type": "string",
+          "description": "Primary language of the PDF book."
+        },
+        "publishedYear": {
+          "type": "integer",
+          "description": "Publication year."
+        },
+        "addedOrder": {
+          "type": "integer",
+          "description": "Numeric ordering sequence."
+        },
+        "dateAdded": {
+          "type": "string",
+          "description": "Formatted date label for display."
+        },
+        "coverStyle": {
+          "type": "string",
+          "description": "Generated cover artwork enum name fallback."
+        },
+        "coverPrimaryArgb": {
+          "type": "integer",
+          "description": "Generated cover primary ARGB color."
+        },
+        "coverSecondaryArgb": {
+          "type": "integer",
+          "description": "Generated cover secondary ARGB color."
+        },
+        "coverAccentArgb": {
+          "type": "integer",
+          "description": "Generated cover accent ARGB color."
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether the book appears in Featured Books."
+        },
+        "popular": {
+          "type": "boolean",
+          "description": "Whether the book appears in Popular Books."
+        },
+        "recent": {
+          "type": "boolean",
+          "description": "Whether the book appears in Recently Added."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Controls public visibility; unpublished drafts are admin-only."
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average rating (0..5)."
+        },
+        "reviewCount": {
+          "type": "integer",
+          "description": "Number of reviews."
+        },
+        "sampleExcerpt": {
+          "type": "string",
+          "description": "Optional short excerpt."
+        },
+        "createdByUid": {
+          "type": "string",
+          "description": "Firebase UID of the administrator who created the record."
+        },
+        "updatedByUid": {
+          "type": "string",
+          "description": "Firebase UID of the administrator who last updated the record."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp() on update."
+        }
+      },
+      "required": [
+        "title",
+        "author",
+        "categoryId",
+        "fileSize",
+        "fileSizeBytes",
+        "language",
+        "featured",
+        "popular",
+        "recent",
+        "published",
+        "createdByUid",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Server-managed administrator role record keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Verified administrator email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Administrator display name."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role label (e.g. admin)."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether admin access is currently active."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/BookCategory"
+      },
+      "description": "Publicly readable book categories managed exclusively by verified administrators."
+    },
+    "/books/{bookId}": {
+      "schema": {
+        "$ref": "#/entities/Book"
+      },
+      "description": "PDF books catalog. Published books (published == true) are readable by readers; drafts and mutations are admin-only."
+    },
+    "/admins/{userId}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Server-provisioned administrator allowlist. Users may read only their own document to verify admin status; client writes are forbidden."
+    }
+  }
+}

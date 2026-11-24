@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Subtle shadow underneath the open book -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M29,74C38,70 46,72 54,76C62,72 70,70 79,74L79,77C70,73 62,75 54,79C46,75 38,73 29,77Z" />
+    <!-- Left open book page -->
+    <path
+        android:fillColor="#FCFBF7"
+        android:pathData="M28,44C36,41 45,42 52.5,47L52.5,73C45,68 36,67 28,70Z" />
+    <!-- Right open book page -->
+    <path
+        android:fillColor="#F3EFE2"
+        android:pathData="M80,44C72,41 63,42 55.5,47L55.5,73C63,68 72,67 80,70Z" />
+    <!-- Gold book binding base -->
+    <path
+        android:fillColor="#F2C94C"
+        android:pathData="M25,47L28,46L28,70C36,67 45,68 54,74C63,68 72,67 80,70L80,46L83,47L83,73C73,70 63,71 54,77C45,71 35,70 25,73Z" />
+    <!-- Center gold bookmark ribbon -->
+    <path
+        android:fillColor="#D9A92E"
+        android:pathData="M52.5,47L55.5,47L55.5,74L54,71.5L52.5,74Z" />
+    <!-- Floating golden 4-point star spark above the book -->
+    <path
+        android:fillColor="#F2C94C"
+        android:pathData="M54,27L56.8,34.2L64,37L56.8,39.8L54,47L51.2,39.8L44,37L51.2,34.2Z" />
+    <!-- Small subtle accent dots -->
+    <path
+        android:fillColor="#F2C94C"
+        android:pathData="M41,32m-2,0a2,2 0 1,1 4,0a2,2 0 1,1 -4,0" />
+    <path
+        android:fillColor="#F2C94C"
+        android:pathData="M67,32m-2,0a2,2 0 1,1 4,0a2,2 0 1,1 -4,0" />
+</vector>
